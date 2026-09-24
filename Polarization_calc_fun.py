@@ -1,5 +1,8 @@
+from matplotlib import pyplot as plt
 import numpy as np
-import scipy as sci
+# from matplotlib import pyplot as plt
+# import scipy as sci
+from scipy.signal import find_peaks
 
 def pull_T_data(filename):
     #Give file_path and will returns 4 lists: angles_deg,angles_rad,data,std_dev
@@ -17,9 +20,9 @@ def pull_T_data(filename):
         angles_deg.append(line[0]+full_rot*360)
         data.append(np.mean(line[1:-1]))
         std_dev.append(np.std(line[1:-1]))
-        if i < 10:
-            if angles_deg[i] >180:
-                angles_deg[i]
+        if i < 20:
+            if angles_deg[i] >270:
+                angles_deg[i]-=360
         if i!=0:
             if angles_deg[i]<angles_deg[i-1]:
                 full_rot +=1
@@ -37,9 +40,15 @@ def E2_max(phi):
     return 0.5+0.5*np.cos(2*phi)
 
 def use_extrema(angles_deg, angles_rad, data):
-    mean = np.mean()
     #might be best to do estimate in phi then refit with actual fitting of the data
     #reason is actual data will likely miss max/min due to being discrete
+    temp = np.abs(data - np.mean(data))
+    # extrema = sci.signal.find_peaks(temp)
+    extrema = find_peaks(temp)
+
+    print('here')
+
+
 
 def fit_phi(dat_file,bkg_file,fit_type='extrema'):
     bkg = np.mean(pull_T_data(bkg_file)[2])
@@ -47,3 +56,8 @@ def fit_phi(dat_file,bkg_file,fit_type='extrema'):
     data = np.array(data) - bkg
     if fit_type == 'extrema':
         fitted_phi = use_extrema(angles_deg, angles_rad, data)
+
+if __name__ == '__main__':
+    file_bkg = r"D:\Diego\git\Polarization_measurement\Data\Test_Data_9-22-26\sample_data_background.csv"
+    file_dat = r"D:\Diego\git\Polarization_measurement\Data\Test_Data_9-22-26\sample_data.csv"
+    fit_phi(file_dat,file_bkg)
