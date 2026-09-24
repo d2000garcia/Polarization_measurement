@@ -38,15 +38,63 @@ def E2_min(phi):
 
 def E2_max(phi):
     return 0.5+0.5*np.cos(2*phi)
+def E2_max_inv(scale,maxi):
+    #fit phi for max values
+    return np.arccos(2*maxi/scale-1)/2
+def E2_min_inv(scale,mini):
+    #fit phi for min values
+    return np.arccos(1-2*mini/scale)/2
 
 def use_extrema(angles_deg, angles_rad, data):
     #might be best to do estimate in phi then refit with actual fitting of the data
     #reason is actual data will likely miss max/min due to being discrete
-    temp = np.abs(data - np.mean(data))
-    # extrema = sci.signal.find_peaks(temp)
-    extrema = find_peaks(temp)
+    avg = np.mean(data)
+    temp = np.abs(data - avg)
+    extrema_ind = find_peaks(temp)[0]
+    extrema = [[],[]]
+    for i in extrema_ind:
+        if data[i] < avg:
+            #mins
+            extrema[0].append(data[i])
+        else:
+            #maxs
+            extrema[1].append(data[i])
+    avgs = [np.mean(extrema[0]),np.mean(extrema[1])]
+    scale_est = avgs[0]+avgs[1]
+    phis = []
+    for i in [0,1]:
+        for val in extrema[i]:
+            if i==0:
+                if val/scale_est>0:
+                    phis.append(E2_min_inv(scale_est,val))
+                else:
+                    #Then min is negative so assume scale/measurment err
+                    phis.append(0)
+                
+            else:
+                if val/scale_est<1:
+                    phis.append(E2_max_inv(scale_est,val))
+                else:
+                    #Then max is larger than 1 so assume scale/measurment err
+                    phis.append(0)
+    phi_est = np.mean(phis)
+    print('Mean_phi_peak_fit =',phi_est)
+    print('Std_phi_peak_fit =',np.std(phis))
+    step_size = np.mean(list(map(lambda x,y:x-y,angles_rad[1:],angles_rad[:-1])))
+    convolv_input = np.arange(angles_rad[-1],angles_rad[-1]+np.pi/2,step_size)
+    convolv_dat = list(map(lambda x:scale_est*E2(x,phi_est),convolv_input.tolist()))
+    result = np.convolve(np.array(data),np.array(convolv_dat))
+    # x = np.arange(0,result.shape[0],1)
+    phase_shift = convolv_input[np.argmax(result)]
+    #may have done wrong need to reanalyze
 
-    print('here')
+    
+    continuous_angles = np.linspace(angles_rad[0],angles_rad[-1],1000)
+    est = list(map(lambda x:scale_est*E2(x-phase_shift,phi_est),continuous_angles.tolist()))
+    plt.plot(angles_deg,data)
+    plt.plot(continuous_angles*180/np.pi,est)
+    plt.show()
+    return phi_est
 
 
 
