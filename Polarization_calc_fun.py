@@ -3,6 +3,7 @@ import numpy as np
 # from matplotlib import pyplot as plt
 # import scipy as sci
 from scipy.signal import find_peaks
+import os as os
 
 def pull_T_data(filename):
     #Give file_path and will returns 4 lists: angles_deg,angles_rad,data,std_dev
@@ -81,20 +82,19 @@ def use_extrema(angles_deg, angles_rad, data):
     print('Mean_phi_peak_fit =',phi_est)
     print('Std_phi_peak_fit =',np.std(phis))
     step_size = np.mean(list(map(lambda x,y:x-y,angles_rad[1:],angles_rad[:-1])))
-    convolv_input = np.arange(angles_rad[-1],angles_rad[-1]+np.pi/2,step_size)
+    convolv_input = np.arange(angles_rad[0]-np.pi/2,angles_rad[-1]+np.pi/2,step_size)
     convolv_dat = list(map(lambda x:scale_est*E2(x,phi_est),convolv_input.tolist()))
-    result = np.convolve(np.array(data),np.array(convolv_dat))
-    # x = np.arange(0,result.shape[0],1)
+    result = np.convolve(np.array(data),np.array(convolv_dat),mode='valid')
+    x = np.arange(0,result.shape[0],1)
     phase_shift = convolv_input[np.argmax(result)]
-    #may have done wrong need to reanalyze
-
-    
     continuous_angles = np.linspace(angles_rad[0],angles_rad[-1],1000)
-    est = list(map(lambda x:scale_est*E2(x-phase_shift,phi_est),continuous_angles.tolist()))
-    plt.plot(angles_deg,data)
-    plt.plot(continuous_angles*180/np.pi,est)
+    est_init = list(map(lambda x:scale_est*E2(x,phi_est),continuous_angles.tolist()))
+    est_v2 = list(map(lambda x:scale_est*E2(x+phase_shift,phi_est),continuous_angles.tolist()))
+    plt.plot(angles_deg,data,'.')
+    plt.plot(continuous_angles*180/np.pi,est_init,'--')
+    plt.plot(continuous_angles*180/np.pi,est_v2,'-')
     plt.show()
-    return phi_est
+    return phi_est , phase_shift
 
 
 
@@ -105,7 +105,8 @@ def fit_phi(dat_file,bkg_file,fit_type='extrema'):
     if fit_type == 'extrema':
         fitted_phi = use_extrema(angles_deg, angles_rad, data)
 
+cwd = os.getcwd()
 if __name__ == '__main__':
-    file_bkg = r"D:\Diego\git\Polarization_measurement\Data\Test_Data_9-22-26\sample_data_background.csv"
-    file_dat = r"D:\Diego\git\Polarization_measurement\Data\Test_Data_9-22-26\sample_data.csv"
+    file_bkg = cwd+r"\Data\Test_Data_9-22-26\sample_data_background.csv"
+    file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
     fit_phi(file_dat,file_bkg)
