@@ -94,11 +94,12 @@ def use_extrema(angles_deg, angles_rad, data):
     plt.plot(continuous_angles*180/np.pi,est_init,'--')
     plt.plot(continuous_angles*180/np.pi,est_v2,'-')
     plt.show()
-    return phi_est , phase_shift
+    return phi_est , phase_shift , scale_est
 
+def refit_phi():
+    pass
 
-
-def fit_phi(dat_file,bkg_file,fit_type='extrema'):
+def init_fit_phi(dat_file,bkg_file,fit_type='extrema'):
     bkg = np.mean(pull_T_data(bkg_file)[2])
     angles_deg,angles_rad,data,std_dev = pull_T_data(dat_file)
     data = np.array(data) - bkg
@@ -109,4 +110,5 @@ cwd = os.getcwd()
 if __name__ == '__main__':
     file_bkg = cwd+r"\Data\Test_Data_9-22-26\sample_data_background.csv"
     file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
-    fit_phi(file_dat,file_bkg)
+    phi_est , phase_shift_est, scale_est =init_fit_phi(file_dat,file_bkg)
+    refit_phi(phi_est , phase_shift_est, scale_est)
