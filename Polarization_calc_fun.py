@@ -81,15 +81,23 @@ def use_extrema(angles_deg, angles_rad, data):
     phi_est = np.mean(phis)
     print('Mean_phi_peak_fit =',phi_est)
     print('Std_phi_peak_fit =',np.std(phis))
-    step_size = np.mean(list(map(lambda x,y:x-y,angles_rad[1:],angles_rad[:-1])))
-    convolv_input = np.arange(angles_rad[0]-np.pi/2,angles_rad[-1]+np.pi/2,step_size)
-    convolv_dat = list(map(lambda x:scale_est*E2(x,phi_est),convolv_input.tolist()))
-    result = np.convolve(np.array(data),np.array(convolv_dat),mode='valid')
-    x = np.arange(0,result.shape[0],1)
-    phase_shift = convolv_input[np.argmax(result)]
+    #Not working consistenly
+    # step_size = np.mean(list(map(lambda x,y:x-y,angles_rad[1:],angles_rad[:-1])))
+    # convolv_input = np.arange(angles_rad[0]-np.pi/2,angles_rad[-1]+np.pi*2,step_size)
+    # convolv_dat = list(map(lambda x:scale_est*E2(x,phi_est),convolv_input.tolist()))
+    # result = np.convolve(np.array(data),np.array(convolv_dat),mode='valid')
+    # # result = np.convolve(np.array(data)-np.mean(data),np.array(convolv_dat)-np.mean(convolv_dat),mode='valid')
+    # x = np.arange(0,result.shape[0],1)
+    # phase_shift = convolv_input[np.argmax(result)]
+    if data[extrema_ind[0]]<avg:
+        #then its a min
+        phase_shift = angles_rad[extrema_ind[0]]+np.pi-phi_est
+    else:
+        #then its a max
+        phase_shift = angles_rad[extrema_ind[0]]-phi_est
     continuous_angles = np.linspace(angles_rad[0],angles_rad[-1],1000)
     est_init = list(map(lambda x:scale_est*E2(x,phi_est),continuous_angles.tolist()))
-    est_v2 = list(map(lambda x:scale_est*E2(x+phase_shift,phi_est),continuous_angles.tolist()))
+    est_v2 = list(map(lambda x:scale_est*E2(x-phase_shift/2,phi_est),continuous_angles.tolist()))
     plt.plot(angles_deg,data,'.')
     plt.plot(continuous_angles*180/np.pi,est_init,'--')
     plt.plot(continuous_angles*180/np.pi,est_v2,'-')
@@ -100,7 +108,9 @@ def refit_phi():
     pass
 
 def init_fit_phi(dat_file,bkg_file,fit_type='extrema'):
-    bkg = np.mean(pull_T_data(bkg_file)[2])
+    # bkg = np.mean(pull_T_data(bkg_file)[2])
+    bkg = pull_T_data(bkg_file)[2]
+    bkg = min(bkg)
     angles_deg,angles_rad,data,std_dev = pull_T_data(dat_file)
     data = np.array(data) - bkg
     if fit_type == 'extrema':
@@ -108,7 +118,9 @@ def init_fit_phi(dat_file,bkg_file,fit_type='extrema'):
 
 cwd = os.getcwd()
 if __name__ == '__main__':
-    file_bkg = cwd+r"\Data\Test_Data_9-22-26\sample_data_background.csv"
-    file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
+    # file_bkg = cwd+r"\Data\Test_Data_9-22-26\sample_data_background.csv"
+    file_bkg = cwd+r"\Data\2026-9-23\photodiode_scan_20260923_132807-BackgroundRef.csv"
+    # file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
+    file_dat = r"C:\Users\Wolfwalker\Documents\git\Polarization_measurement\Polarization_measurement\Data\2026-9-23\photodiode_scan_20260923_140117.csv"
     phi_est , phase_shift_est, scale_est =init_fit_phi(file_dat,file_bkg)
     refit_phi(phi_est , phase_shift_est, scale_est)
