@@ -3,6 +3,7 @@ import numpy as np
 # from matplotlib import pyplot as plt
 # import scipy as sci
 from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 import os as os
 
 def pull_T_data(filename):
@@ -34,6 +35,11 @@ def pull_T_data(filename):
 def E2(theta,phi):
     #In radians angle theta of polarizer to x-axis and radians phi of quarter wave to x-axis 
     return 0.5+0.5*np.cos(2*theta-2*phi)*np.cos(2*phi)
+
+def E2_fit(theta,scale,shift,phi):
+    #In radians angle theta of polarizer to x-axis and radians phi of quarter wave to x-axis 
+    return scale*(0.5+0.5*np.cos(2*theta-2*phi-shift)*np.cos(2*phi))
+
 def E2_min(phi):
     return 0.5-0.5*np.cos(2*phi)
 
@@ -94,33 +100,31 @@ def use_extrema(angles_deg, angles_rad, data):
         phase_shift = angles_rad[extrema_ind[0]]+np.pi-phi_est
     else:
         #then its a max
-        phase_shift = angles_rad[extrema_ind[0]]-phi_est
+        phase_shift = angles_rad[extrema_ind[0]]
     continuous_angles = np.linspace(angles_rad[0],angles_rad[-1],1000)
     est_init = list(map(lambda x:scale_est*E2(x,phi_est),continuous_angles.tolist()))
     est_v2 = list(map(lambda x:scale_est*E2(x-phase_shift/2,phi_est),continuous_angles.tolist()))
     plt.plot(angles_deg,data,'.')
     plt.plot(continuous_angles*180/np.pi,est_init,'--')
     plt.plot(continuous_angles*180/np.pi,est_v2,'-')
+    plt.ylim(0,scale_est)
     plt.show()
     return phi_est , phase_shift , scale_est
 
-def refit_phi():
-    pass
-
-def init_fit_phi(dat_file,bkg_file,fit_type='extrema'):
+def fit_phi(dat_file,bkg_file,fit_type='extrema'):
     # bkg = np.mean(pull_T_data(bkg_file)[2])
     bkg = pull_T_data(bkg_file)[2]
     bkg = min(bkg)
     angles_deg,angles_rad,data,std_dev = pull_T_data(dat_file)
     data = np.array(data) - bkg
-    if fit_type == 'extrema':
-        fitted_phi = use_extrema(angles_deg, angles_rad, data)
+    phi_est , phase_shift , scale_est = use_extrema(angles_deg, angles_rad, data)
+    # param, param_cov = curve_fit(fit_phi,angles_rad,data)
 
 cwd = os.getcwd()
 if __name__ == '__main__':
     # file_bkg = cwd+r"\Data\Test_Data_9-22-26\sample_data_background.csv"
     file_bkg = cwd+r"\Data\2026-9-23\photodiode_scan_20260923_132807-BackgroundRef.csv"
     # file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
-    file_dat = r"C:\Users\Wolfwalker\Documents\git\Polarization_measurement\Polarization_measurement\Data\2026-9-23\photodiode_scan_20260923_140117.csv"
-    phi_est , phase_shift_est, scale_est =init_fit_phi(file_dat,file_bkg)
-    refit_phi(phi_est , phase_shift_est, scale_est)
+    file_dat = cwd+r"\Data\2026-9-23\photodiode_scan_20260923_134629.csv"
+    phi_est , phase_shift_est, scale_est =fit_phi(file_dat,file_bkg)
+    fit_phi(phi_est , phase_shift_est, scale_est)
