@@ -36,9 +36,9 @@ def E2(theta,phi):
     #In radians angle theta of polarizer to x-axis and radians phi of quarter wave to x-axis 
     return 0.5+0.5*np.cos(2*theta-2*phi)*np.cos(2*phi)
 
-def E2_fit(theta,scale,shift,phi):
+def E2_fit(theta,phi,shift,scale):
     #In radians angle theta of polarizer to x-axis and radians phi of quarter wave to x-axis 
-    return scale*(0.5+0.5*np.cos(2*theta-2*phi-shift)*np.cos(2*phi))
+    return scale*(0.5+0.5*np.cos(2*(theta-shift)-2*phi)*np.cos(2*phi))
 
 def E2_min(phi):
     return 0.5-0.5*np.cos(2*phi)
@@ -111,14 +111,26 @@ def use_extrema(angles_deg, angles_rad, data):
     plt.show()
     return phi_est , phase_shift , scale_est
 
-def fit_phi(dat_file,bkg_file,fit_type='extrema'):
+def fit_phi(dat_file,bkg_file):
     # bkg = np.mean(pull_T_data(bkg_file)[2])
     bkg = pull_T_data(bkg_file)[2]
     bkg = min(bkg)
     angles_deg,angles_rad,data,std_dev = pull_T_data(dat_file)
     data = np.array(data) - bkg
     phi_est , phase_shift , scale_est = use_extrema(angles_deg, angles_rad, data)
-    # param, param_cov = curve_fit(fit_phi,angles_rad,data)
+    bound = ([phi_est-5*np.pi/180, -np.pi/2 , scale_est*0.8],[phi_est+5*np.pi/180, np.pi/2, scale_est*1.2])
+    param, param_cov = curve_fit(E2_fit,angles_rad,data,[phi_est , phase_shift , scale_est],bounds=bound)
+    continuous_angles = np.linspace(angles_rad[0],angles_rad[-1],1000)
+    fit = list(map(lambda x:E2_fit(x,*param),continuous_angles.tolist()))
+    plt.plot(angles_deg,data,'.')
+    plt.plot(continuous_angles*180/np.pi,fit)
+    plt.ylim(0,scale_est)
+    plt.show()
+
+    resid = np.array(data)-np.array(list(map(lambda x:E2_fit(x,*param),angles_rad)))
+    plt.plot(angles_deg,resid)
+    plt.show()
+    return 3
 
 cwd = os.getcwd()
 if __name__ == '__main__':
