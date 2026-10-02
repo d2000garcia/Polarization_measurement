@@ -1,0 +1,16 @@
+20260923_130234 - 0-390 (laser ON, lights OFF) - aiming for circular polarization thru 1/4 wave plate - buffer didnt work? 
+20260923_130623 - 0-360 (laser ON, lights OFF) - aiming for circular polarization thru 1/4 wave plate - buffer worked
+--note: aligned 1/4 wave plate now
+20260923_132807 - 0-360 (laser ON, lights OFF) - 1/4 plate at 0 (should be reference point)
+20260923_133413 - 0-360 (laser ON, lights OFF) - 1/4 plate at 10 - buffer might not have worked for first data point :|
+20260923_133812 - 0-360 (laser ON, lights OFF) - 1/4 plate at 20
+20260923_134629 - 0-360 (laser ON, lights OFF) - 1/4 plate at 30
+20260923_136012 - 0-360 (laser ON, lights OFF) - 1/4 plate at 45 (circular polarization)
+20260923_135350 - 0-360 (laser ON, lights OFF) - 1/4 plate at 50
+20260923_135722 - 0-360 (laser ON, lights OFF) - 1/4 plate at 60
+20260923_140117 - 0-360 (laser ON, lights OFF) - 1/4 plate at 70
+20260923_140449 - 0-360 (laser ON, lights OFF) - 1/4 plate at 80
+20260923_140814 - 0-360 (laser ON, lights OFF) - 1/4 plate at 90
+
+
+initial: polarization axis 

@@ -1,9 +1,1 @@
-*
-!.gitignore
-!**/.py
-!**/.png
-!**/.txt
-!**/.csv
-!**/.tsv
-!**/.xlsx
 .vscode/settings.json

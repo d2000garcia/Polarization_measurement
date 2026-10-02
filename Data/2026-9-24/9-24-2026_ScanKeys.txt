@@ -1,0 +1,6 @@
+20260924_151726 - 0-360 (laser ON, lights OFF) quarter wave = 30 deg - note: buffer didnt work for first run, so need to run this angle again
+20260924_152043 - 0-360 (laser ON, lights OFF) quarter wave = 30 deg - buffer worked
+20260924_152437 - 0-360 (laser ON, lights OFF) quarter wave = 35 deg 
+20260924_152808 - 0-360 (laser ON, lights OFF) quarter wave = 40 deg
+20260924_153146 - 0-360 (laser ON, lights OFF) quarter wave = 45 deg
+20260924_154719 - 0-360 (laser ON, lights OFF) quarter wave = 41 deg
