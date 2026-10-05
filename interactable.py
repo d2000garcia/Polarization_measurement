@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import Polarization_calc as Pc
+import run_rotation as rot
 
 class window:
     def __init__(self,window,default_path = r".\Picture_template.png", plot_w = 500, plot_h = 300):
@@ -35,13 +37,13 @@ class window:
         self.window_manager['labels'][1].grid(column=2,row=1)
         self.window_manager['labels'][2].grid(column=0,row=2)
         self.window_manager['laser_on'] = tk.IntVar()
-        tk.Checkbutton(self.window,text="Laser On for Background?",variable=self.window_manager['laser_on']).grid(column=3,row=2)
+        # tk.Checkbutton(self.window,text="Laser On for Background?",variable=self.window_manager['laser_on']).grid(column=3,row=2)
 
         self.window_manager['labels'].append(ttk.Label(self.window,text='Run Measurement [deg]'))
         self.window_manager['labels'].append(ttk.Label(self.window,text='Start Angle'))
         self.window_manager['labels'].append(ttk.Label(self.window,text='End Angle'))
         self.window_manager['labels'].append(ttk.Label(self.window,text='Step Size'))
-        self.window_manager['labels'].append(ttk.Label(self.window,text='Wav angle'))
+        self.window_manager['labels'].append(ttk.Label(self.window,text='# Samples per step'))
         self.window_manager['labels'][3].grid(column=6,row=1,columnspan=2)
         self.window_manager['labels'][4].grid(column=5,row=2)
         self.window_manager['labels'][5].grid(column=8,row=2)
@@ -83,8 +85,8 @@ class window:
         # self.window_manager['work_dir']['lab'] = ttk.Label(self.window, textvariable=self.window_manager['work_dir']['tk_var'])
         # self.window_manager['work_dir']['lab'].grid(column=3, row=11,columnspan=4, sticky="nsew")
 
-    def update_work_dir(self,new_par_fold):
-        self.window_manager['dir']=new_par_fold+'\\Analysis'
+    # def update_work_dir(self,new_par_fold):
+    #     self.window_manager['dir']=new_par_fold
 
     def update_image(self,name):
         """
@@ -121,18 +123,21 @@ class analysis:
         self.root =  root
         self.wind = window(root, plot_w=int(500*img_scale),plot_h=int(300*img_scale))
         self.wind.window_manager['button']['Folder'].configure(command=self.open_file_dialog)
-        # self.folderpath = ''
+        self.pol_calc = Pc.pol_analysis()
+        self.file_loaded= False
+        self.folderpath = ''
         # self.fit_rng = [0,0]
-
-        # #make buttons
-        # self.wind.window_manager['button']['run'].configure(command=lambda:self.calculateTFit('456'))
-        # self.wind.window_manager['button']['Fit data'].configure(command=lambda:self.calculateBeatFit('456'))
-        # self.wind.window_manager['exit'][''].configure(command=lambda:self.show_plot('456'))
+        #make buttons
+        self.wind.window_manager['button']['Show'].configure(command=self.show_plot)
+        self.wind.window_manager['button']['Set Fit Rng'].configure(command=self.set_rng)
+        self.wind.window_manager['button']['Fit'].configure(command=self.do_fit)
+        self.wind.window_manager['button']['Get Background'].configure(command=lambda : self.run_rot(False))
+        self.wind.window_manager['button']['Get Normal Measurement'].configure(command=lambda : self.run_rot(True))
 
     def open_file_dialog(self):
         temporary = filedialog.askdirectory(
             initialdir="/",  # Optional: set initial directory
-            title="Select a folder",
+            title="Select a folder"
             # filetypes=(("Text files", "*.txt"), ("All files", "*.*")) # Optional: filter file types
         )
         if temporary:
@@ -142,21 +147,67 @@ class analysis:
             print(f"Selected folder: {self.folderpath}")
             self.checkforanalysis()
 
-    def checkforanalysis(self,folderpath):
+    def checkforanalysis(self):
         contents = os.listdir(self.folderpath)
         check = list(map(lambda x:'PD_scan' in x,contents))
         if True in check:
             par_fold = self.folderpath[:self.folderpath.rfind('/')]
-            check2 = list(map(lambda x:'background' in x,contents))
-            file = folder + '\\'+ contents[check.index(True)]
+            contents2 = os.listdir(par_fold)
+            check2 = list(map(lambda x:'background' in x,contents2))
+            if True in check2:
+                self.file_loaded = True
+                bkg_file = par_fold + '\\'+ contents2[check2.index(True)]
+                self.pol_calc.grab_background(bkg_file)
+                file = self.folderpath + '\\'+ contents[check.index(True)]
+                self.pol_calc.grab_data(self.folderpath,file)
+                self.wind.window_manager['dir'] = self.folderpath
+                self.wind.update_image('OgScan')
+            else:
+                print('Need to run background scan first!')
 
         else:
-            print('Not a valid folder picked')
+            print('Not a valid folder picked!')
 
+    def set_rng(self):
+        if self.file_loaded:
+            self.pol_calc.set_rng(int(self.window_manager['entries']['fit_rng']['val'][0].get()),int(self.window_manager['entries']['fit_rng']['val'][1].get()))
+            self.wind.update_image('OgScan')
+        else:
+            print('Pick file to analyze first!')
+
+    def show_plot(self):
+        if self.file_loaded:
+            self.pol_calc.show_plot()
+        else:
+            print('Pick file to analyze first!')
+
+    def do_fit(self):
+        if self.file_loaded:
+            self.pol_calc.fit_phi()
+        else:
+            print('Pick file to analyze first!')
+
+    def run_rot(self,background_meas=False):
+        good = False
+        temp = []
+        try:
+            temp =  list(map(lambda x: int(self.wind.window_manager['entries']['rot_ent']['val'][x].get()),[0,1,2,3]))   
+            if temp[0] < temp[1]:
+                if temp[2] > 0:
+                    if temp[3] > 0:
+                        rot.main(temp[0],temp[1],temp[2],temp[3],background_meas)
+                    else:
+                        print('Number of samples per step needs to be greater than 0!')
+                else:
+                    print('Step size needs to be greater than 0!')
+            else:
+                print('Min angle needs to be less than max angle!')     
+        except:
+            print('Not valid entries into rotation values!')
 
 first = True
 scale = 1
-template_image = r".\Picture_template.png"
+# template_image = r".\Picture_template.png"
 if __name__ == '__main__':
     if first:
         root = tk.Tk()

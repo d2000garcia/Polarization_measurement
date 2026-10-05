@@ -82,7 +82,7 @@ import os as os
 #     # 
 #     # \print(measured_angles, measured_voltages)
 
-def main(start_pos,end_pos,acquisition_count,step_size,background=False):
+def main(start_pos,end_pos,step_size,acquisition_count,background=False):
     """
     Main function to run scan and save the file.
 
@@ -92,10 +92,10 @@ def main(start_pos,end_pos,acquisition_count,step_size,background=False):
         Integer for starting position in degrees, can be below 0.
     end_pos : int
         Integer for ending position in degrees, can be beyond 360.
-    step_size : int
-        Step size in degrees for rotation mount to rotate.
     acquisition_count : int
         Number of samples to take per step.
+    step_size : int
+        Step size in degrees for rotation mount to rotate.
     background : bool
         Bool that informs program whether this is a background measurement or instead a normal measurement.
 

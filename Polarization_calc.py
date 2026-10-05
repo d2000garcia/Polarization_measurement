@@ -10,6 +10,25 @@ import os as os
 #Day folder "10_02_26" -> time folder "10_02_26+13_45_25" -> "measurement_dat.csv" 
 #interactable will add so that time folder "10_02_26+13_45_25" -> "measurement_dat.csv" & "Analysis" -> 'param_fit.csv" & "Og_plot.png" & "fitted.png" & "resid.png"
 def pull_T_data(filename):
+    """
+    Pull transmission data generated from run_rotation
+
+    Parameters
+    ----------
+    filename : str
+        filepath to pull data from
+
+    Returns
+    ------- All lists same length
+    angles_deg : list
+        Returned angles from thorlabs mount in degrees.
+    angles_rad : list
+        Converted angles from angles_deg to radians.
+    data : list
+        Averaged measurements for each step in the rotation measurement.
+    std_dev :  list
+        Standard deviation of the averaged measurements for each step in the rotation measurement.
+    """
     #Give file_path and will returns 4 lists: angles_deg,angles_rad,data,std_dev
     angles_deg=[]
     angles_rad=[]
@@ -65,25 +84,28 @@ class pol_analysis:
         self.data = []
         self.std_dev = []
 
-    def grab_background(self,laser_on=False):
-        par_fold = self.folderpath[:self.folderpath.rfind('/')]
-        #Get Background for dc offset
-        if laser_on:
-                #Assume phi=0 so that min = background
-                temp = pull_T_data(par_fold + '\\background.csv')
-                self.background = min(temp[2])+np.mean(temp[3])
+    def grab_background(self,bkg_file):
+        temp = pull_T_data(bkg_file)
+        #Check for if laser is on
+        if np.std(temp[2])/np.mean(temp[3])>15:
+            #Then assume laser is on
+            #Assume phi=0 so that min = background
+            self.background = min(temp[2])+np.mean(temp[3])
         else:
             #Background measurement present so use that
-            self.background = np.mean(par_fold + '\\background.csv')
+            leng = len(temp[2])
+            #Pulling data from inner range just to make sure no bugs of wrong measurements
+            self.background = np.mean(temp[2][int(leng*0.25),int(leng*0.75)])
 
-    def grab_data(self):
-        self.angles_deg,self.angles_rad,data,self.std_dev = pull_T_data(self.folderpath+'\\pol_meas.csv')
+    def grab_data(self,folderpath,file_path):
+        self.folderpath = folderpath
+        self.angles_deg,self.angles_rad,data,self.std_dev = pull_T_data(file_path)
         self.data =list(map(lambda x: x-self.background,data))
         self.fit_rng_ind = [0,len(self.angles_deg)]
         self.fit_angles_deg = self.angles_deg[self.fit_rng_ind[0],self.fit_rng_ind[1]]
         self.fit_angles_rad = self.angles_rad[self.fit_rng_ind[0],self.fit_rng_ind[1]]
         self.fit_data = self.data[self.fit_rng_ind[0],self.fit_rng_ind[1]]
-        if not os.path.exists():
+        if not os.path.exists(self.folderpath+r'\OgScan.png'):
             plt.plot(self.angles_deg,self.data)
             plt.xlim(min(self.angles_deg),max(self.angles_deg))
             plt.title('Original Data in fitting range')
