@@ -130,7 +130,6 @@ def fit_phi(dat_file,bkg_file):
     resid = np.array(data)-np.array(list(map(lambda x:E2_fit(x,*param),angles_rad)))
     plt.plot(angles_deg,resid)
     plt.show()
-    return 3
 
 cwd = os.getcwd()
 if __name__ == '__main__':

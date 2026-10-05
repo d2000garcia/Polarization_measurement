@@ -83,22 +83,22 @@ class window:
         # self.window_manager['work_dir']['lab'] = ttk.Label(self.window, textvariable=self.window_manager['work_dir']['tk_var'])
         # self.window_manager['work_dir']['lab'].grid(column=3, row=11,columnspan=4, sticky="nsew")
 
-    # def update_work_dir(self,new_par_fold):
-    #     self.window_manager['456']['dir']=new_par_fold+r'\Analysis\456\plots'
-    #     self.window_manager['894']['dir']=new_par_fold+r'\Analysis\894\plots'
-    
-    # def update_image(self,scan,name):
-    #     if scan in self.scans:
-    #         if name in self.plotslabs[0]:temp=1
-    #         elif name in self.plotslabs[1]:temp=2
-    #         else: temp=0
-    #         if temp:
-    #             plot_path = self.window_manager['dir'] + '\\' + name + '.png'
-    #             temp2 = Image.open(plot_path)
-    #             resized_temp2 = temp2.resize((self.plot_w, self.plot_h), Image.LANCZOS)
-    #             self.window_manager['Imgs'][temp-1][name]['TkImg'] = ImageTk.PhotoImage(resized_temp2)
-    #             self.window_manager['Imgs'][temp-1][name]['Label'].configure(image=self.window_manager['Imgs'][temp-1][name]['TkImg'])
-    #             self.window_manager['Imgs'][temp-1][name]['Label'].image = self.window_manager['Imgs'][temp-1][name]['TkImg']
+    def update_work_dir(self,new_par_fold):
+        self.window_manager['dir']=new_par_fold+'\\Analysis'
+
+    def update_image(self,name):
+        """
+        name : str
+            name of plot
+        """
+        if name in self.plotslabs:
+            plot_path = self.window_manager['dir'] + '\\' + name + '.png'
+            temp2 = Image.open(plot_path)
+            resized_temp2 = temp2.resize((self.plot_w, self.plot_h), Image.LANCZOS)
+            self.window_manager['Imgs'][name]['TkImg'] = ImageTk.PhotoImage(resized_temp2)
+            self.window_manager['Imgs'][name]['Label'].configure(image=self.window_manager['Imgs'][name]['TkImg'])
+            self.window_manager['Imgs'][name]['Label'].image = self.window_manager['Imgs'][name]['TkImg']
+
     # def change_Label_image(self,new,oldlabel):
     # #oldlabel is the label you want to change and
     # #new is new Tkimage to exchange
@@ -120,7 +120,7 @@ class analysis:
     def __init__(self,root,img_scale):
         self.root =  root
         self.wind = window(root, plot_w=int(500*img_scale),plot_h=int(300*img_scale))
-        # self.wind.window_manager['button']['both']['open_fold'].configure(command=self.open_file_dialog)
+        self.wind.window_manager['button']['Folder'].configure(command=self.open_file_dialog)
         # self.folderpath = ''
         # self.fit_rng = [0,0]
 
@@ -128,6 +128,31 @@ class analysis:
         # self.wind.window_manager['button']['run'].configure(command=lambda:self.calculateTFit('456'))
         # self.wind.window_manager['button']['Fit data'].configure(command=lambda:self.calculateBeatFit('456'))
         # self.wind.window_manager['exit'][''].configure(command=lambda:self.show_plot('456'))
+
+    def open_file_dialog(self):
+        temporary = filedialog.askdirectory(
+            initialdir="/",  # Optional: set initial directory
+            title="Select a folder",
+            # filetypes=(("Text files", "*.txt"), ("All files", "*.*")) # Optional: filter file types
+        )
+        if temporary:
+            self.folderpath = temporary
+            date_time = self.folderpath[self.folderpath.rfind('/')+1:]
+            self.root.title(date_time + ' Fiting Analysis')
+            print(f"Selected folder: {self.folderpath}")
+            self.checkforanalysis()
+
+    def checkforanalysis(self,folderpath):
+        contents = os.listdir(self.folderpath)
+        check = list(map(lambda x:'PD_scan' in x,contents))
+        if True in check:
+            par_fold = self.folderpath[:self.folderpath.rfind('/')]
+            check2 = list(map(lambda x:'background' in x,contents))
+            file = folder + '\\'+ contents[check.index(True)]
+
+        else:
+            print('Not a valid folder picked')
+
 
 first = True
 scale = 1
