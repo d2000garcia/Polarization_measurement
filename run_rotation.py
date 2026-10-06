@@ -135,7 +135,7 @@ def main(start_pos,end_pos,step_size,acquisition_count,background=False):
         os.mkdir(day_folder)
     if background == False:
         os.mkdir(day_folder+'\\'+meas_time)
-        filename = day_folder+'\\'+meas_time+'\\PD_scan_'+meas_time+'.csv'
+        filename = day_folder+'\\'+meas_time+'\\PD_scan+'+meas_time+'.csv'
     else:
         filename = day_folder+'\\PD_background_scan_'+meas_time+'.csv'
 
