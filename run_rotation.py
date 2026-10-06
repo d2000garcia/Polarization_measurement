@@ -193,6 +193,7 @@ def main(start_pos,end_pos,step_size,acquisition_count,background=False):
         for i in range(0, acquisition_count): 
             voltage = get_photodiode_measurement(nucleo, ref_voltage)
             data[-1].append(float(voltage))       
+        print(data[-1]) #see measurements for associated angle
         # write to csv
         elapsed_time = time.perf_counter() - start_time
         data.append(elapsed_time)

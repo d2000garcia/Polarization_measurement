@@ -202,8 +202,8 @@ class analysis:
                     print('Step size needs to be greater than 0!')
             else:
                 print('Min angle needs to be less than max angle!')     
-        except:
-            print('Not valid entries into rotation values!')
+        except Exception as e:
+            print(f'Not valid entries into rotation values! : {e}')
 
 first = True
 scale = 1
