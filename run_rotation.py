@@ -182,31 +182,37 @@ def main(start_pos,end_pos,step_size,acquisition_count,background=False):
 
     data = []
     for angle in angles:
+        row = [] # temporary list to store row's data
         start_time = time.perf_counter() # index to start timing for loop iterations
 
         stage.move_absolute(angle%360, blocking=True)
-        data.append([stage.get_position()])
+        row.append(stage.get_position())
         time.sleep(0.1) # waiting to make sure everythings all synced up
 
         print(f"Reached {stage.get_position()} degrees")
 
         for i in range(0, acquisition_count): 
             voltage = get_photodiode_measurement(nucleo, ref_voltage)
-            data[-1].append(float(voltage))       
-        print(data[-1]) #see measurements for associated angle
-        # write to csv
+            row.append(float(voltage))       
+        print(row) #see measurements for associated angle
+        
         elapsed_time = time.perf_counter() - start_time
-        data.append(elapsed_time)
-    i = True
+        row.append(elapsed_time)
+        data.append(row)
+    #i = True
+    # WRITE CSV
     title = ['angle']
     title.extend(map(lambda x: 'V%i'%x,range(acquisition_count)))
     title.append('loop_time')
-    file = open(filename,'w')
-    file.write(','.join(title))
-    for dat in data:
-        file.write('\n')
-        file.write(','.join(map(str,dat)))
-    file.close()
+    with open(filename, 'w') as file:
+        #file = open(filename,'w')
+        file.write(','.join(title))
+        for dat in data:
+            file.write('\n')
+            file.write(','.join(map(str,dat)))
+    print("Finshed writing csv.")
+    
+    #file.close() getting rid of open...close in case of any issues
 
     stage.home(blocking=True)
 

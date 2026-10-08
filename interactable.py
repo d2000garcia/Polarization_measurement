@@ -131,8 +131,8 @@ class analysis:
         self.wind.window_manager['button']['Show'].configure(command=self.show_plot)
         self.wind.window_manager['button']['Set Fit Rng'].configure(command=self.set_rng)
         self.wind.window_manager['button']['Fit'].configure(command=self.do_fit)
-        self.wind.window_manager['button']['Get Background'].configure(command=lambda : self.run_rot(False))
-        self.wind.window_manager['button']['Get Normal Measurement'].configure(command=lambda : self.run_rot(True))
+        self.wind.window_manager['button']['Get Background'].configure(command=lambda : self.run_rot(True))
+        self.wind.window_manager['button']['Get Normal Measurement'].configure(command=lambda : self.run_rot(False))
 
     def open_file_dialog(self):
         temporary = filedialog.askdirectory(
