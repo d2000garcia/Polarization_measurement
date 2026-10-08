@@ -137,5 +137,5 @@ if __name__ == '__main__':
     file_bkg = cwd+r"\Data\2026-9-23\photodiode_scan_20260923_132807-BackgroundRef.csv"
     # file_dat = cwd+r"\Data\Test_Data_9-22-26\sample_data.csv"
     file_dat = cwd+r"\Data\2026-9-23\photodiode_scan_20260923_134629.csv"
-    phi_est , phase_shift_est, scale_est =fit_phi(file_dat,file_bkg)
+    # phi_est , phase_shift_est, scale_est =use(file_dat,file_bkg)
     fit_phi(phi_est , phase_shift_est, scale_est)

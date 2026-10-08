@@ -95,18 +95,18 @@ class pol_analysis:
             #Background measurement present so use that
             leng = len(temp[2])
             #Pulling data from inner range just to make sure no bugs of wrong measurements
-            self.background = np.mean(temp[2][int(leng*0.25),int(leng*0.75)])
+            self.background = np.mean(temp[2][int(leng*0.25):int(leng*0.75)])
 
     def grab_data(self,folderpath,file_path):
         self.folderpath = folderpath
         self.angles_deg,self.angles_rad,data,self.std_dev = pull_T_data(file_path)
         self.data =list(map(lambda x: x-self.background,data))
         self.fit_rng_ind = [0,len(self.angles_deg)]
-        self.fit_angles_deg = self.angles_deg[self.fit_rng_ind[0],self.fit_rng_ind[1]]
-        self.fit_angles_rad = self.angles_rad[self.fit_rng_ind[0],self.fit_rng_ind[1]]
-        self.fit_data = self.data[self.fit_rng_ind[0],self.fit_rng_ind[1]]
+        self.fit_angles_deg = self.angles_deg[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
+        self.fit_angles_rad = self.angles_rad[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
+        self.fit_data = self.data[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
         if not os.path.exists(self.folderpath+r'\OgScan.png'):
-            plt.plot(self.angles_deg,self.data)
+            plt.plot(self.fit_angles_deg,self.fit_data,'--',marker='o')
             plt.xlim(min(self.angles_deg),max(self.angles_deg))
             plt.title('Original Data in fitting range')
             plt.savefig(self.folderpath+r'\OgScan.png')
@@ -117,17 +117,17 @@ class pol_analysis:
         #in degrees
         self.fit_rng = [ang_min,ang_max]
         self.fit_rng_ind = [0,len(self.angles_deg)]
-        if ang_min==ang_max:
+        if ang_min!=ang_max:
             for i,angle in enumerate(self.angles_deg):
                 if self.angles_deg[i-1] < ang_min and ang_min < angle:
                     self.fit_rng_ind[0] = i
                 elif self.angles_deg[i-1] < ang_max and ang_max < angle:
                     self.fit_rng_ind[1] = i
-        self.fit_angles_deg = self.angles_deg[self.fit_rng_ind[0],self.fit_rng_ind[1]]
-        self.fit_angles_rad = self.angles_rad[self.fit_rng_ind[0],self.fit_rng_ind[1]]
-        self.fit_data = self.data[self.fit_rng_ind[0],self.fit_rng_ind[1]]
+        self.fit_angles_deg = self.angles_deg[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
+        self.fit_angles_rad = self.angles_rad[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
+        self.fit_data = self.data[self.fit_rng_ind[0]:self.fit_rng_ind[1]]
 
-        plt.plot(self.angles_deg,self.data)
+        plt.plot(self.angles_deg,self.data,'--',marker='o')
         plt.xlim(min(self.angles_deg),max(self.angles_deg))
         plt.title('Original Data in fitting range')
         if ang_min!=ang_max:
@@ -187,25 +187,26 @@ class pol_analysis:
         self.phi_est = phi_est
         self.scale_est = scale_est
 
-def fit_phi(self):
-    bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
-    param, param_cov = curve_fit(E2_fit,self.fit_angles_rad,self.fit_data,[self.phi_est , 0 , self.scale_est],bounds=bound)
-    np.savetxt(self.folderpath+'\\fit_param.csv',param)
-    continuous_angles = np.linspace(self.fit_angles_rad[0],self.fit_angles_rad[-1],1000)
-    fit = list(map(lambda x:E2_fit(x,*param),continuous_angles.tolist()))
-    plt.plot(self.fit_angles_deg,self.fit_data,'.')
-    plt.plot(continuous_angles*180/np.pi,fit)
-    plt.ylim(0,self.scale_est)
-    plt.xlabel('Angle [deg]')
-    plt.title(r'Fitted Curve, $\phi=$'+str(self.param[0]))
-    plt.savefig(self.folderpath+r'\Fitted.png')
-    # plt.show()
-    plt.clf()
+    def fit_phi(self):
+        bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
+        self.param, self.param_cov = curve_fit(E2_fit,self.fit_angles_rad,self.fit_data,[self.phi_est , 0 , self.scale_est],bounds=bound)
+        np.savetxt(self.folderpath+'\\fit_param.csv',self.param)
+        continuous_angles = np.linspace(self.fit_angles_rad[0],self.fit_angles_rad[-1],1000)
+        fit = list(map(lambda x:E2_fit(x,*self.param),continuous_angles.tolist()))
+        ellip = np.sqrt(1-np.tan(self.param[0])**2)
+        plt.plot(self.fit_angles_deg,self.fit_data,'.')
+        plt.plot(continuous_angles*180/np.pi,fit)
+        plt.ylim(0,self.scale_est)
+        plt.xlabel('Angle [deg]')
+        plt.title(r'Fitted Curve, $\phi=%.4f^\circ,e=%.4f$'%(self.param[0]*180/np.pi,ellip))
+        plt.savefig(self.folderpath+r'\Fitted.png')
+        # plt.show()
+        plt.clf()
 
-    resid = np.array(self.fit_data)-np.array(list(map(lambda x:E2_fit(x,*param),self.fit_angles_rad)))
-    plt.plot(self.fit_angles_deg,resid)
-    plt.title('Residuals')
-    plt.xlabel('Angle [deg]')
-    plt.savefig(self.folderpath+r'\Resid.png')
-    # plt.show()
-    plt.clf()
+        resid = np.array(self.fit_data)-np.array(list(map(lambda x:E2_fit(x,*self.param),self.fit_angles_rad)))
+        plt.plot(self.fit_angles_deg,resid)
+        plt.title(r'Residuals, $\phi=%.4f^\circ,e=%.4f$'%(self.param[0]*180/np.pi,ellip))
+        plt.xlabel('Angle [deg]')
+        plt.savefig(self.folderpath+r'\Resid.png')
+        # plt.show()
+        plt.clf()

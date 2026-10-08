@@ -9,7 +9,6 @@ from tkinter import filedialog
 from PIL import Image, ImageTk
 import Polarization_calc as Pc
 import run_rotation as rot
-
 class window:
     def __init__(self,window,default_path = r".\Picture_template.png", plot_w = 500, plot_h = 300):
         default_img = Image.open(default_path)
@@ -76,17 +75,7 @@ class window:
                 self.window_manager['button'][functs[round(i/3)+4]].grid(column=5+round(i/3)*2,columnspan=2,row=4)
         self.window_manager['button']['exit'] = ttk.Button(self.window,text='Close',command=exit)
         self.window_manager['button']['exit'].grid(column=4,row=5)
-
-
-        # self.window_manager['button']['both']['exit'].configure(command=exit)
-
-        # self.window_manager['work_dir'] = {'path':'Pick Directory','tk_var':tk.StringVar()}
-        # self.window_manager['work_dir']['tk_var'].set('Pick Directory')
-        # self.window_manager['work_dir']['lab'] = ttk.Label(self.window, textvariable=self.window_manager['work_dir']['tk_var'])
-        # self.window_manager['work_dir']['lab'].grid(column=3, row=11,columnspan=4, sticky="nsew")
-
-    # def update_work_dir(self,new_par_fold):
-    #     self.window_manager['dir']=new_par_fold
+        self.resized_default = resized_default
 
     def update_image(self,name):
         """
@@ -100,6 +89,17 @@ class window:
             self.window_manager['Imgs'][name]['TkImg'] = ImageTk.PhotoImage(resized_temp2)
             self.window_manager['Imgs'][name]['Label'].configure(image=self.window_manager['Imgs'][name]['TkImg'])
             self.window_manager['Imgs'][name]['Label'].image = self.window_manager['Imgs'][name]['TkImg']
+
+    def reset_img(self,name):
+        """
+        name : str
+            name of plot
+        """
+        if name in self.plotslabs:
+            self.window_manager['Imgs'][name]['TkImg'] = ImageTk.PhotoImage(self.resized_default)
+            self.window_manager['Imgs'][name]['Label'].configure(image=self.window_manager['Imgs'][name]['TkImg'])
+            self.window_manager['Imgs'][name]['Label'].image = self.window_manager['Imgs'][name]['TkImg']
+
 
     # def change_Label_image(self,new,oldlabel):
     # #oldlabel is the label you want to change and
@@ -136,7 +136,7 @@ class analysis:
 
     def open_file_dialog(self):
         temporary = filedialog.askdirectory(
-            initialdir="/",  # Optional: set initial directory
+            initialdir=os.getcwd()+'\\Measurements',  # Optional: set initial directory
             title="Select a folder"
             # filetypes=(("Text files", "*.txt"), ("All files", "*.*")) # Optional: filter file types
         )
@@ -162,6 +162,12 @@ class analysis:
                 self.pol_calc.grab_data(self.folderpath,file)
                 self.wind.window_manager['dir'] = self.folderpath
                 self.wind.update_image('OgScan')
+                if os.path.exists(self.folderpath+'\\fit_param.csv'):
+                    self.wind.update_image('Fitted')
+                    self.wind.update_image('Resid')
+                else:
+                    self.wind.reset_img('Fitted')
+                    self.wind.reset_img('Resid')
             else:
                 print('Need to run background scan first!')
 
@@ -170,7 +176,7 @@ class analysis:
 
     def set_rng(self):
         if self.file_loaded:
-            self.pol_calc.set_rng(int(self.window_manager['entries']['fit_rng']['val'][0].get()),int(self.window_manager['entries']['fit_rng']['val'][1].get()))
+            self.pol_calc.set_rng(int(self.wind.window_manager['entries']['fit_rng']['val'][0].get()),int(self.wind.window_manager['entries']['fit_rng']['val'][1].get()))
             self.wind.update_image('OgScan')
         else:
             print('Pick file to analyze first!')
@@ -183,7 +189,10 @@ class analysis:
 
     def do_fit(self):
         if self.file_loaded:
+            self.pol_calc.use_extrema()
             self.pol_calc.fit_phi()
+            self.wind.update_image('Fitted')
+            self.wind.update_image('Resid')
         else:
             print('Pick file to analyze first!')
 
