@@ -42,8 +42,8 @@ def pull_T_data(filename):
         i+=1
         line = list(map(float,line.strip().split(',')))
         angles_deg.append(line[0]+full_rot*360)
-        data.append(np.mean(line[1:-1]))
-        std_dev.append(np.std(line[1:-1]))
+        data.append(np.mean(line[1:]))
+        std_dev.append(np.std(line[1:]))
         if i < 20:
             if angles_deg[i] >270:
                 angles_deg[i]-=360
