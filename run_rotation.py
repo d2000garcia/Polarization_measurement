@@ -193,17 +193,19 @@ def main(start_pos,end_pos,step_size,acquisition_count,background=False):
 
         for i in range(0, acquisition_count): 
             voltage = get_photodiode_measurement(nucleo, ref_voltage)
-            row.append(float(voltage))       
+            row.append(float(voltage))
         print(row) #see measurements for associated angle
         
         elapsed_time = time.perf_counter() - start_time
         row.append(elapsed_time)
+        row.append(float(angle))  # last column will be intended angle (can go beyond 360)
         data.append(row)
     #i = True
     # WRITE CSV
     title = ['angle']
     title.extend(map(lambda x: 'V%i'%x,range(acquisition_count)))
     title.append('loop_time')
+    title.append('intended angle')
     with open(filename, 'w') as file:
         #file = open(filename,'w')
         file.write(','.join(title))
