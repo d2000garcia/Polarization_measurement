@@ -157,8 +157,19 @@ class pol_analysis:
             else:
                 #maxs
                 extrema[1].append(self.fit_data[i])
-        avgs = [np.mean(extrema[0]),np.mean(extrema[1])]
-        scale_est = avgs[0]+avgs[1]
+
+        # need to account for when there is not a minima or maxima in the range --> change how we assign avgs
+        if (len(extrema[0])) == 0:
+            # there were no minima in the range
+            avgs = [0, np.mean(extrema[1])]
+        elif (len(extrema[1])) == 0:
+            # there were no maxima in the range
+            avgs = [np.mean(extrema[0]), 0]
+        else:
+            # there were both minima and maxima in the range
+            avgs = [np.mean(extrema[0]),np.mean(extrema[1])]
+
+        scale_est = avgs[0]+avgs[1] # if we change how we assign avgs, then we don't need to change scale_est
         phis = []
         for i in [0,1]:
             for val in extrema[i]:
@@ -170,7 +181,7 @@ class pol_analysis:
                         phis.append(0)
                     
                 else:
-                    if val/scale_est<1:
+                    if val/scale_est <= 1:
                         phis.append(E2_max_inv(scale_est,val))
                     else:
                         #Then max is larger than 1 so assume scale/measurment err
@@ -186,6 +197,7 @@ class pol_analysis:
         # plt.show()
         self.phi_est = phi_est
         self.scale_est = scale_est
+        print(scale_est)
 
     def fit_phi(self):
         bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
