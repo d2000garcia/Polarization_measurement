@@ -197,7 +197,6 @@ class pol_analysis:
         # plt.show()
         self.phi_est = phi_est
         self.scale_est = scale_est
-        print(scale_est)
 
     def fit_phi(self):
         bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
