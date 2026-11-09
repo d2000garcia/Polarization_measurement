@@ -204,7 +204,11 @@ class pol_analysis:
         np.savetxt(self.folderpath+'\\fit_param.csv',self.param)
         continuous_angles = np.linspace(self.fit_angles_rad[0],self.fit_angles_rad[-1],1000)
         fit = list(map(lambda x:E2_fit(x,*self.param),continuous_angles.tolist()))
-        ellip = np.sqrt(1-np.tan(self.param[0])**2)
+        # ellip = np.sqrt(1-np.tan(self.param[0])**2)
+        ellip = np.sqrt(
+            (1 - np.abs(np.cos(2*self.param[0]))) /
+            (1 + np.abs(np.cos(2*self.param[0])))
+        )
         plt.plot(self.fit_angles_deg,self.fit_data,'.')
         plt.plot(continuous_angles*180/np.pi,fit)
         plt.ylim(0,self.scale_est)
