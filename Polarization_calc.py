@@ -198,6 +198,25 @@ class pol_analysis:
         self.phi_est = phi_est
         self.scale_est = scale_est
 
+    def ellip_uncertainty_ver3(self):
+        # Traditional error propgation using resolution + covariance (?)
+        
+        phi = self.param[0]
+        sigma_phi = 3*np.pi/180 # \pm 3 degrees resolution?
+        # sigma_phi_2 = np.sqrt(self.param_cov[0,0]) # covariance of fitting phi (independent? quadrature?)
+
+        c = np.abs(np.cos(2*phi)) # factor for ellip calculation below
+        ellip = np.sqrt((1-c) / (1+c))
+
+        # derivative for propgation:
+        if np.isclose(1 - c, 0, atol=1e-10): # handle asymptote at 0
+            deriv = 1.0
+        else:
+            deriv = (2 * np.abs(np.sin(2 * phi)) / (np.sqrt(1 - c) * (1 + c)**1.5))
+        ellip_unc = deriv * sigma_phi
+
+        return ellip, ellip_unc
+
     def fit_phi(self):
         bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
         self.param, self.param_cov = curve_fit(E2_fit,self.fit_angles_rad,self.fit_data,[self.phi_est , 0 , self.scale_est],bounds=bound)
@@ -205,10 +224,11 @@ class pol_analysis:
         continuous_angles = np.linspace(self.fit_angles_rad[0],self.fit_angles_rad[-1],1000)
         fit = list(map(lambda x:E2_fit(x,*self.param),continuous_angles.tolist()))
         # ellip = np.sqrt(1-np.tan(self.param[0])**2)
-        ellip = np.sqrt(
-            (1 - np.abs(np.cos(2*self.param[0]))) /
-            (1 + np.abs(np.cos(2*self.param[0])))
-        )
+        # ellip = np.sqrt(
+        #     (1 - np.abs(np.cos(2*self.param[0]))) /
+        #     (1 + np.abs(np.cos(2*self.param[0])))
+        # )
+        ellip, ellip_unc = self.ellip_uncertainty_ver3()
         plt.plot(self.fit_angles_deg,self.fit_data,'.')
         plt.plot(continuous_angles*180/np.pi,fit)
         plt.ylim(0,self.scale_est)
