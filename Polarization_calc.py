@@ -213,7 +213,7 @@ class pol_analysis:
         plt.plot(continuous_angles*180/np.pi,fit)
         plt.ylim(0,self.scale_est)
         plt.xlabel('Angle [deg]')
-        plt.title(r'Fitted Curve, $\phi=%.4f^\circ,e=%.4f$'%(self.param[0]*180/np.pi,ellip))
+        plt.title(r'Fitted Curve, $\phi=%.4f^\circ,e=%.4f\pm%.4f$'%(self.param[0]*180/np.pi,ellip, ellip_unc))
         plt.savefig(self.folderpath+r'\Fitted.png')
         # plt.show()
         plt.clf()
