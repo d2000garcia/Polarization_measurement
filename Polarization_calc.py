@@ -202,8 +202,8 @@ class pol_analysis:
         # Traditional error propgation using resolution + covariance (?)
         
         phi = self.param[0]
-        sigma_phi = 3*np.pi/180 # \pm 3 degrees resolution?
-        # sigma_phi_2 = np.sqrt(self.param_cov[0,0]) # covariance of fitting phi (independent? quadrature?)
+        sigma_phi = 2*np.pi/180 # \pm 2 degrees resolution?
+        sigma_phi_2 = np.sqrt(self.param_cov[0,0]) # covariance of fitting phi (independent? quadrature?)
 
         c = np.abs(np.cos(2*phi)) # factor for ellip calculation below
         ellip = np.sqrt((1-c) / (1+c))
@@ -213,7 +213,7 @@ class pol_analysis:
             deriv = 1.0
         else:
             deriv = (2 * np.abs(np.sin(2 * phi)) / (np.sqrt(1 - c) * (1 + c)**1.5))
-        ellip_unc = deriv * sigma_phi
+        ellip_unc = np.sqrt((deriv * sigma_phi)**2 + (sigma_phi_2)**2)
 
         return ellip, ellip_unc
 
