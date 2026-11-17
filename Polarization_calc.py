@@ -38,19 +38,27 @@ def pull_T_data(filename):
     file.readline()
     full_rot = 0
     i = -1
+
+    previous_angle = None
+
     for line in file:
         i+=1
         line = list(map(float,line.strip().split(',')))
-        angles_deg.append(line[0]+full_rot*360)
-        data.append(np.mean(line[1:-1]))
-        std_dev.append(np.std(line[1:-1]))
-        if i < 20:
-            if angles_deg[i] >270:
-                angles_deg[i]-=360
-        if i!=0:
-            if angles_deg[i]<angles_deg[i-1]:
+
+        angle = line[0]
+
+        if i < 20 and angle > 270:
+            angle -=360
+        if previous_angle is not None:
+            if angle < previous_angle: # cannot compare against corrected values !
                 full_rot +=1
-                angles_deg[i] += 360
+
+        previous_angle = angle
+
+        angles_deg.append(angle + full_rot * 360)
+        data.append(np.mean(line[1:-2])) # last 2 rows are time + intended angle
+        std_dev.append(np.std(line[1:-2])) # last 2 rows are time + intended angle
+        
     angles_rad = list(map(lambda x: x*np.pi/180,angles_deg))
     return angles_deg, angles_rad, data, std_dev
 
@@ -202,8 +210,14 @@ class pol_analysis:
         # Traditional error propgation using resolution + covariance (?)
         
         phi = self.param[0]
-        sigma_phi = 2*np.pi/180 # \pm 2 degrees resolution?
-        sigma_phi_2 = np.sqrt(self.param_cov[0,0]) # covariance of fitting phi (independent? quadrature?)
+        delta_phi = 2*np.pi/180 # \pm 2 degrees resolution?
+
+        # handling discontinuity at phi = 0
+        if not (np.isfinite(self.param_cov[0,0])) or np.sqrt(self.param_cov[0,0]) > delta_phi:
+            sigma_phi = 0
+            print("Warning: fit uncertainty too high to use. Only using resolution of measurement.")
+        else:        
+            sigma_phi = np.sqrt(self.param_cov[0,0]) # covariance of fitting phi (independent? quadrature?)
 
         c = np.abs(np.cos(2*phi)) # factor for ellip calculation below
         ellip = np.sqrt((1-c) / (1+c))
@@ -213,7 +227,7 @@ class pol_analysis:
             deriv = 1.0
         else:
             deriv = (2 * np.abs(np.sin(2 * phi)) / (np.sqrt(1 - c) * (1 + c)**1.5))
-        ellip_unc = np.sqrt((deriv * sigma_phi)**2 + (sigma_phi_2)**2)
+        ellip_unc = np.sqrt((deriv * delta_phi)**2 + (deriv *sigma_phi)**2)
 
         return ellip, ellip_unc
 
