@@ -42,7 +42,7 @@ def pull_T_data(filename):
 
         angle_rep = line[0] # angle reported by device
         angle_int = line[-1] # angle intended by user
-        remainder = angle_rep - angle_int # could be positive or negative 
+        remainder = angle_rep - angle_int # if the intended angle is negative, remainder will be greater than 360 and should remain untouched
 
         if np.abs(remainder) > 177 and np.abs(remainder) < 183:
             if remainder < 0: 
@@ -230,8 +230,9 @@ class pol_analysis:
         else:
             deriv = (2 * np.abs(np.sin(2 * phi)) / (np.sqrt(1 - c) * (1 + c)**1.5))
         ellip_unc = np.sqrt((deriv * delta_phi)**2 + (deriv *sigma_phi)**2)
+        phi_unc = (np.sqrt((delta_phi)**2 + (sigma_phi)**2)) * 180 / np.pi
 
-        return ellip, ellip_unc
+        return ellip, ellip_unc, phi_unc
 
     def fit_phi(self):
         bound = ([self.phi_est-5*np.pi/180, -np.pi/2 , self.scale_est*0.8],[self.phi_est+5*np.pi/180, np.pi/2, self.scale_est*1.2])
@@ -244,12 +245,12 @@ class pol_analysis:
         #     (1 - np.abs(np.cos(2*self.param[0]))) /
         #     (1 + np.abs(np.cos(2*self.param[0])))
         # )
-        ellip, ellip_unc = self.ellip_uncertainty_ver3()
+        ellip, ellip_unc, phi_unc = self.ellip_uncertainty_ver3()
         plt.plot(self.fit_angles_deg,self.fit_data,'.')
         plt.plot(continuous_angles*180/np.pi,fit)
         plt.ylim(0,self.scale_est)
         plt.xlabel('Angle [deg]')
-        plt.title(r'Fitted Curve, $\phi=%.4f^\circ,e=%.4f\pm%.4f$'%(self.param[0]*180/np.pi,ellip, ellip_unc))
+        plt.title(r'Fitted Curve, $\phi=%.4f^\circ\pm%.4f,e=%.4f\pm%.4f$'%(self.param[0]*180/np.pi, phi_unc, ellip, ellip_unc))
         plt.savefig(self.folderpath+r'\Fitted.png')
         # plt.show()
         plt.clf()
