@@ -36,26 +36,28 @@ def pull_T_data(filename):
     std_dev=[]
     file = open(filename,'r')
     file.readline()
-    full_rot = 0
-    i = -1
-
-    previous_angle = None
 
     for line in file:
-        i+=1
         line = list(map(float,line.strip().split(',')))
 
-        angle = line[0]
+        angle_rep = line[0] # angle reported by device
+        angle_int = line[-1] # angle intended by user
+        remainder = angle_rep - angle_int # could be positive or negative 
 
-        if i < 20 and angle > 270:
-            angle -=360
-        if previous_angle is not None:
-            if angle < previous_angle: # cannot compare against corrected values !
-                full_rot +=1
+        if np.abs(remainder) > 177 and np.abs(remainder) < 183:
+            if remainder < 0: 
+                angle_final = angle_rep + 180
+            else:
+                angle_final = angle_rep - 180
+        elif np.abs(remainder) > 357 and np.abs(remainder) < 363:
+            if remainder < 0:
+                angle_final = angle_rep + 360
+            else:
+                angle_final = angle_rep - 360
+        else:
+            angle_final = angle_rep
 
-        previous_angle = angle
-
-        angles_deg.append(angle + full_rot * 360)
+        angles_deg.append(angle_final)
         data.append(np.mean(line[1:-2])) # last 2 rows are time + intended angle
         std_dev.append(np.std(line[1:-2])) # last 2 rows are time + intended angle
         
